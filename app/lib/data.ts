@@ -10,6 +10,24 @@ import {
 } from './definitions';
 import { formatCurrency } from './utils';
 
+// export default async function Cart({
+//   params
+// } : {
+//   params: { user: string }
+// }): Promise<JSX.Element> {
+//   const { rows } = await sql`SELECT * from CARTS where user_id=${params.user}`;
+
+//   return (
+//     <div>
+//       {rows.map((row) => (
+//         <div key={row.id}>
+//           {row.id} - {row.quantity}
+//         </div>
+//       ))}
+//     </div>
+//   );
+// }
+
 export async function fetchRevenue() {
   // Add noStore() here to prevent the response from being cached.
   // This is equivalent to in fetch(..., {cache: 'no-store'}).
@@ -18,8 +36,8 @@ export async function fetchRevenue() {
     // Artificially delay a response for demo purposes.
     // Don't do this in production :)
 
-    // console.log('Fetching revenue data...');
-    // await new Promise((resolve) => setTimeout(resolve, 3000));
+    console.log('Fetching revenue data...');
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const data = await sql<Revenue>`SELECT * FROM revenue`;
 
