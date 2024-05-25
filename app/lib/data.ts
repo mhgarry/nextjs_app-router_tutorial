@@ -11,24 +11,6 @@ import {
 import { formatCurrency } from './utils';
 import { unstable_noStore as noStore } from 'next/cache';
 
-// export default async function Cart({
-//   params
-// } : {
-//   params: { user: string }
-// }): Promise<JSX.Element> {
-//   const { rows } = await sql`SELECT * from CARTS where user_id=${params.user}`;
-
-//   return (
-//     <div>
-//       {rows.map((row) => (
-//         <div key={row.id}>
-//           {row.id} - {row.quantity}
-//         </div>
-//       ))}
-//     </div>
-//   );
-// }
-
 export async function fetchRevenue() {
   // Add noStore() here to prevent the response from being cached.
   // This is equivalent to in fetch(..., {cache: 'no-store'}).
@@ -37,8 +19,8 @@ export async function fetchRevenue() {
     // Artificially delay a response for demo purposes.
     // Don't do this in production :)
 
-    console.log('Fetching revenue data...');
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    // console.log('Fetching revenue data...');
+    // await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const data = await sql<Revenue>`SELECT * FROM revenue`;
 
@@ -81,9 +63,9 @@ export async function fetchCardData() {
     const invoiceCountPromise = sql`SELECT COUNT(*) FROM invoices`;
     const customerCountPromise = sql`SELECT COUNT(*) FROM customers`;
     const invoiceStatusPromise = sql`SELECT
-        SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) AS "paid",
-        SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending"
-        FROM invoices`;
+         SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) AS "paid",
+         SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending"
+         FROM invoices`;
 
     const data = await Promise.all([
       invoiceCountPromise,
@@ -137,6 +119,7 @@ export async function fetchFilteredInvoices(
       ORDER BY invoices.date DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
+
     return invoices.rows;
   } catch (error) {
     console.error('Database Error:', error);
@@ -184,7 +167,7 @@ export async function fetchInvoiceById(id: string) {
       // Convert amount from cents to dollars
       amount: invoice.amount / 100,
     }));
-    console.log(invoice);
+
     return invoice[0];
   } catch (error) {
     console.error('Database Error:', error);
@@ -193,7 +176,6 @@ export async function fetchInvoiceById(id: string) {
 }
 
 export async function fetchCustomers() {
-  noStore();
   try {
     const data = await sql<CustomerField>`
       SELECT

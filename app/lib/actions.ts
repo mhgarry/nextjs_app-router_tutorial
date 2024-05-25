@@ -1,17 +1,16 @@
 'use server';
 
-import { custom, z } from 'zod';
+import { z } from 'zod';
 import { sql } from '@vercel/postgres';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
-import { CreateInvoice } from '../ui/invoices/buttons';
 
 const FormSchema = z.object({
   id: z.string(),
-  cusotmerId: z.string({
-    invalid_type_error: 'Customer ID must be a string.',
+  customerId: z.string({
+    invalid_type_error: 'Please select a customer.',
   }),
   amount: z.coerce
     .number()
@@ -22,35 +21,35 @@ const FormSchema = z.object({
   date: z.string(),
 });
 
-// const UpdateInvoice = FormSchema.omit({ id: true, date: true });
+const CreateInvoice = FormSchema.omit({ id: true, date: true });
+const UpdateInvoice = FormSchema.omit({ date: true, id: true });
 
-// const CreateInvoice = FormSchema.omit({ id: true, date: true });
-
-// This is temporary until @types/react-dom is updated
+// This is temporary
 export type State = {
   errors?: {
-    customerId?: String[];
-    amount?: String[];
-    status?: String[];
+    customerId?: string[];
+    amount?: string[];
+    status?: string[];
   };
   message?: string | null;
 };
 
-// create an async function to create an invoice
 export async function createInvoice(prevState: State, formData: FormData) {
-  // validate form fields with zod
+  // Validate form fields using Zod
   const validatedFields = CreateInvoice.safeParse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
     status: formData.get('status'),
   });
 
+  // If form validation fails, return errors early. Otherwise, continue.
   if (!validatedFields.success) {
     return {
-      errors: validatedFields.error.flatten.fieldErrors,
-      message: 'Missing fields. Failed to create invoice.',
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Create Invoice.',
     };
   }
+
   // Prepare data for insertion into the database
   const { customerId, amount, status } = validatedFields.data;
   const amountInCents = amount * 100;
@@ -74,26 +73,24 @@ export async function createInvoice(prevState: State, formData: FormData) {
   redirect('/dashboard/invoices');
 }
 
-///
 export async function updateInvoice(
   id: string,
   prevState: State,
   formData: FormData,
 ) {
   const validatedFields = UpdateInvoice.safeParse({
-    cusomterId: formData.get('customerId'),
+    customerId: formData.get('customerId'),
     amount: formData.get('amount'),
     status: formData.get('status'),
   });
 
   if (!validatedFields.success) {
     return {
-      errors: validatedFields.error.flatten.fieldErrors,
-      message: 'Missing fields. Failed to update invoice.',
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Update Invoice.',
     };
   }
 
-  // desconstruct the validated fields and extract the amount of the invoice
   const { customerId, amount, status } = validatedFields.data;
   const amountInCents = amount * 100;
 
@@ -102,26 +99,29 @@ export async function updateInvoice(
       UPDATE invoices
       SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
       WHERE id = ${id}
-      `;
+    `;
   } catch (error) {
     return { message: 'Database Error: Failed to Update Invoice.' };
   }
+
   revalidatePath('/dashboard/invoices');
   redirect('/dashboard/invoices');
 }
 
 export async function deleteInvoice(id: string) {
+  // throw new Error('Failed to Delete Invoice');
+
   try {
     await sql`DELETE FROM invoices WHERE id = ${id}`;
     revalidatePath('/dashboard/invoices');
-    return { message: 'Deleted Invoice.' };
+    return { message: 'Deleted Invoice' };
   } catch (error) {
     return { message: 'Database Error: Failed to Delete Invoice.' };
   }
 }
 
 export async function authenticate(
-  preveState: string | undefined,
+  prevState: string | undefined,
   formData: FormData,
 ) {
   try {
@@ -132,7 +132,7 @@ export async function authenticate(
         case 'CredentialsSignin':
           return 'Invalid credentials.';
         default:
-          return 'An error occurred. Please try again.';
+          return 'Something went wrong.';
       }
     }
     throw error;
