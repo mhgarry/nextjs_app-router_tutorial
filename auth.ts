@@ -15,3 +15,28 @@ async function getUser(email: string): Promise<User | undefined> {
     throw new Error('Failed to fetch user.');
   }
 } // function to get user from database by email and check if the user exists
+
+export const { auth, signIn, signOut } = NextAuth({
+  ...authConfig,
+  providers: [
+    Credentials({
+      async authorize(credentials) {
+        const parseCredentials = z
+          .object({ email: z.string().email(), password: z.string.min(6) })
+          .safeParse(credentials); // parse credentials to check if email and password are valid\
+
+        if (parseCredentials.success) {
+          const { email, password } = parseCredentials.data;
+          const user = await getUser(email);
+          if (!user) return null;
+          const passwordsMatch = await bcrypt.compare(password, user.password);
+
+          if (passwordsMatch) return user;
+        }
+
+        console.log('Invalid credentials');
+        return null;
+      },
+    }),
+  ],
+});
