@@ -3,6 +3,12 @@ import Breadcrumbs from '@/app/ui/invoices/breadcrumbs';
 import { fetchInvoiceById, fetchCustomers } from '@/app/lib/data';
 import { updateInvoice } from '@/app/lib/actions';
 import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Edit Invoice',
+  description: 'Edit an existing invoice',
+};
 
 export default async function Page({ params }: { params: { id: string } }) {
   const id = params.id;
